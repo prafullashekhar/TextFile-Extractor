@@ -13,11 +13,11 @@ public class Main {
 
         Scanner sc = new Scanner(System.in);
 //        while(true){
-            String s = sc.next();
-            dataRepository.createTransaction(s);
+//            String s = sc.next();
+//            dataRepository.createTransaction(s);
 //        }
 
-//        dataRepository.createTransaction("D:\\My Downloads\\checking\\fafasfa");
+        dataRepository.createTransaction("D:\\My Downloads\\checking\\fafasfa");
 
     }
 }

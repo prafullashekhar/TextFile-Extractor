@@ -22,7 +22,7 @@ public class DataRepositoryImpl implements DataRepository {
     public void createTransaction(String path) throws IOException {
         Connection connection = db.getConnection();
         insertListOfTextFileInDatabase(connection, path);
-        db.closeConnection(connection);
+//        db.closeConnection(connection);
     }
 
     // getListOfTextFile provides you the list of all the txt files in the given dirPath

@@ -64,18 +64,11 @@ public class Database {
 
     // the insertFile function is used to insert the detail of any text file in the database
     public void insertRowIntoTable(Connection connection, MetaDataModel metaDataModel){
-
-//        Thread t = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                System.out.println("Hello testing");
-//            }
-//        });
-
-//        Thread t = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 try{
+                    System.out.println("Hello testing");
                     // here the order of column in sql table is (id, fileName, dirPath, lastModifiedTime, status)
                     String sqlQuery = String.format(
                             "INSERT INTO %s VALUES(?,?,?,?,?) ON CONFLICT(%s) DO NOTHING;", Constants.TABLE_NAME, Constants.ID
@@ -90,10 +83,11 @@ public class Database {
                     preparedStatement.executeUpdate();
                     preparedStatement.close();
                 }catch (Exception e){
-                    System.out.println(e.getMessage());
+                    System.out.println(e.getMessage()+" prafull");
                 }
             }
-//        });
-//    }
+        });
+        t.start();
+    }
 
 }
