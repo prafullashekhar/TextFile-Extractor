@@ -22,7 +22,7 @@ public class DataRepositoryImpl implements DataRepository {
     public void createTransaction(String path) throws IOException {
         Connection connection = db.getConnection();
         insertListOfTextFileInDatabase(connection, path);
-//        db.closeConnection(connection);
+        db.closeConnection(connection);
     }
 
     // getListOfTextFile provides you the list of all the txt files in the given dirPath
@@ -46,6 +46,10 @@ public class DataRepositoryImpl implements DataRepository {
             throw new RuntimeException(e);
         }
     }
+
+    // this function will move the .txt file from srcPath to targetPath
+//    private void moveFromSrcToTarget(Path srcPath, Path targetPath){
+//    }
 
 
     // this function deals with defining the TextField of the table
