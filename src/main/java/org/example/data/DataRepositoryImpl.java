@@ -7,28 +7,24 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Connection;
-import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
 public class DataRepositoryImpl implements DataRepository {
     
     private final Database db;
-    private final FileCopying fileCopy;
+    private final ExecutorService executorService;
     
-    public DataRepositoryImpl(Database db, FileCopying fileCopy) {
-        this.db = db;
-        this.fileCopy = fileCopy;
+    public DataRepositoryImpl(ExecutorService executorService) {
+        this.db = new Database();
+        this.executorService = executorService;
         db.createTableInDatabase(db);
     }
     
     @Override
     public void createTransaction(String sourcePath, String targetPath) throws IOException {
-        Connection connection = db.getConnection();
-        insertListOfTextFileInDatabase(connection, sourcePath, Paths.get(targetPath));
-        db.closeConnection(connection);
+        insertListOfTextFileInDatabase(Paths.get(sourcePath), Paths.get(targetPath));
     }
     
     @Override
@@ -41,55 +37,24 @@ public class DataRepositoryImpl implements DataRepository {
     this function iterates over all files in the given dirPath
     and inserts all the required text files transactions
      */
-    private void insertListOfTextFileInDatabase(Connection connection, String sourcePath, Path targetFilePath) throws IOException {
+    private void insertListOfTextFileInDatabase(Path sourceFilePath, Path targetFilePath) throws IOException {
         
-        try (Stream<Path> stream = Files.list(Paths.get(sourcePath))) {
+        try (Stream<Path> stream = Files.list(sourceFilePath)) {
             stream.forEach(path -> {
                 // if the path is a directory just calling the function again to add all the txtFiles
                 if (Files.isDirectory(path)) {
                     try {
-                        insertListOfTextFileInDatabase(connection, path.toAbsolutePath().toString(), targetFilePath.resolve(path.getFileName()));
+                        insertListOfTextFileInDatabase(path.toAbsolutePath(), targetFilePath.resolve(path.getFileName()));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else if (path.toFile().getName().endsWith(".txt")) {
-                    if (db.insertRowIntoTable(connection, getMetaDataModelFromFile(path))) {
-//                        System.out.println("Hi prafull insert files");
-                        moveFromSrcToTarget(path, targetFilePath.resolve(path.toFile().getName()));
-                    }
+                    executorService.execute(new TransactionTaskThread(path, targetFilePath.resolve(path.toFile().getName())));
                 }
             });
             
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-    
-    
-    /*
-     this function will move the .txt file from srcPath to targetPath
-     */
-    private void moveFromSrcToTarget(Path sourceFilePath, Path targetFilePath) {
-        fileCopy.createTextFile(sourceFilePath, targetFilePath);
-    }
-    
-    
-    /*
-     this function deals with defining the TextField of the table
-     */
-    private MetaDataModel getMetaDataModelFromFile(Path file) {
-        try {
-            BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
-            return new MetaDataModel(
-                    file.toString() + attributes.lastModifiedTime(),
-                    file.toFile().getName(),
-                    file.toFile().getParent(),
-                    new Timestamp(attributes.lastModifiedTime().toMillis()),
-                    "READ"
-            );
-        } catch (IOException ex) {
-            System.out.format("I/O error: %s%n", ex);
-            throw new RuntimeException(ex);
         }
     }
     

@@ -7,6 +7,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+Database class is used for performing any operation in the Database.
+It has all the details of database like Database name, username, password.
+ */
 public class Database {
     private final String dbName = "project1";
     private final String userName = "postgres";
@@ -66,10 +70,11 @@ public class Database {
     
     
     /*
-    the insertFile function is used to insert the detail of any text file in the database
+    the insertRowIntoTable function is used to insert the detail of any text file in the database
     will return true if row got inserted else will return false
     */
-    public boolean insertRowIntoTable(Connection connection, MetaDataModel metaDataModel) {
+    public boolean insertRowIntoTable(MetaDataModel metaDataModel) {
+        Connection connection = getConnection();
         try {
             String sqlQueryToCheck = String.format("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = '%s');", Constants.TABLE_NAME, Constants.ID, metaDataModel.getId());
             ResultSet rs = connection.createStatement().executeQuery(sqlQueryToCheck);
@@ -91,6 +96,8 @@ public class Database {
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            closeConnection(connection);
         }
     }
     
